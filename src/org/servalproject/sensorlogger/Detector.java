@@ -1,10 +1,10 @@
 package org.servalproject.sensorlogger;
 
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -66,7 +66,13 @@ public class Detector extends Service implements SensorEventListener{
 		started = new Date();
 		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd_HHmmss");
 		try {
-			out = new DataOutputStream(new FileOutputStream("/sdcard/movement"+f.format(started)+".log"));
+			
+			out = new DataOutputStream(
+					new FileOutputStream(
+						new File(
+								this.getExternalFilesDir(null),
+								"movement_"+f.format(started)+".log"
+					)));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
