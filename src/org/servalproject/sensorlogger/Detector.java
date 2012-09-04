@@ -18,12 +18,16 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.FloatMath;
 import android.util.Log;
 
 public class Detector extends Service implements SensorEventListener{
 	SensorManager sensorManager;
+	PowerManager powerManager;
 	Sensor sensor;
+	WakeLock lock;
 	static boolean running = false;
 	Date started;
 	float gravity[]=new float[3];
@@ -51,6 +55,11 @@ public class Detector extends Service implements SensorEventListener{
 		sensorManager.unregisterListener(this);
 		this.unregisterReceiver(receiver);
 		finishFile();
+		
+		if (lock!=null){
+			lock.release();
+			lock=null;
+		}
 		running = false;
 		super.onDestroy();
 	}
@@ -69,6 +78,7 @@ public class Detector extends Service implements SensorEventListener{
 								this.getExternalFilesDir(null),
 								"movement_"+dateFormat.format(started)+".log"
 					)));
+			log("time,accuracy,x,y,z,magnitude,hpf_x,hpf_y,hpf_z,hpf_magnitude\n");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -91,6 +101,11 @@ public class Detector extends Service implements SensorEventListener{
 		Log.v("Acceleration", "Start capture of sensor data");
 		log("time,accuracy,x,y,z,magnitude,hpf_x,hpf_y,hpf_z,hpf_magnitude\n");
 		sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
+		powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
+		
+		lock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Accelerometer");
+		lock.acquire();
+		
 		sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		
 		Log.v("Sensor", "Name: "+sensor.getName());
