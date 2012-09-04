@@ -50,32 +50,44 @@ public class Detector extends Service implements SensorEventListener{
 		Log.v("Acceleration", "Stopping capture of sensor data");
 		sensorManager.unregisterListener(this);
 		this.unregisterReceiver(receiver);
+		finishFile();
+		running = false;
+		super.onDestroy();
+	}
+
+	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+	private void startFile(){
+		finishFile();
+		
+		startTime=-1;
+		started = new Date();
+		
+		try {
+			out = new DataOutputStream(
+					new FileOutputStream(
+						new File(
+								this.getExternalFilesDir(null),
+								"movement_"+dateFormat.format(started)+".log"
+					)));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void finishFile(){
+		if (out==null)
+			return;
+		
 		try {
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		out = null;
-		running = false;
-		super.onDestroy();
 	}
-
+	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		startTime=-1;
-		started = new Date();
-		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd_HHmmss");
-		try {
-			
-			out = new DataOutputStream(
-					new FileOutputStream(
-						new File(
-								this.getExternalFilesDir(null),
-								"movement_"+f.format(started)+".log"
-					)));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
 		Log.v("Acceleration", "Start capture of sensor data");
 		log("time,accuracy,x,y,z,magnitude,hpf_x,hpf_y,hpf_z,hpf_magnitude\n");
 		sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
@@ -117,6 +129,13 @@ public class Detector extends Service implements SensorEventListener{
 	}
 	
 	public void onSensorChanged(SensorEvent event) {
+		// messages are queued and may arrive after stopping
+		if (!running) 
+			return;
+		
+		// start a new file every hour
+		if (started==null || System.currentTimeMillis() - started.getTime() >= (60*60*1000))
+			startFile();
 		
 		if (startTime==-1)
 			startTime = event.timestamp;
@@ -156,7 +175,7 @@ public class Detector extends Service implements SensorEventListener{
 		float hpf_magnitude = FloatMath.sqrt(hpf_accel[0]*hpf_accel[0] + hpf_accel[1]*hpf_accel[1] + hpf_accel[2]*hpf_accel[2]);
 		
 		// log the raw data
-		log(String.format("%.3f,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+		log(String.format("%.4f,%d,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
 						(event.timestamp - startTime)/1000000000.0,
 						event.accuracy,
 						event.values[0],
