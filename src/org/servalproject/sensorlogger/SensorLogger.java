@@ -2,11 +2,12 @@ package org.servalproject.sensorlogger;
 
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
@@ -73,15 +74,20 @@ public abstract class SensorLogger implements SensorEventListener{
 		
 		firstEntry=-1;
 		started = System.currentTimeMillis();
+		String name=typeName+"_"+sensor.getName()+"_"+dateFormat.format(new Date(started));
+		
 		currentFile=new File(
 				logFolder,
-				typeName+"_"+sensor.getName()+"_"+dateFormat.format(new Date(started))+".log"
+				name+".zip"
 		);
 		try {
-			out = new DataOutputStream(
-					new FileOutputStream(currentFile));
+			ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(currentFile));
+			ZipEntry entry = new ZipEntry(name+".log");
+			entry.setTime(started);
+			zout.putNextEntry(entry);
+			out = new DataOutputStream(zout);
 			logHeader();
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
