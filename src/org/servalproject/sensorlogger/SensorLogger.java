@@ -13,16 +13,19 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 public abstract class SensorLogger implements SensorEventListener{
+	final Detector detector;
 	final Sensor sensor;
 	final int interval;
 	final String typeName;
+	File currentFile;
 	final File logFolder;
 	static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
 	long started=-1;
 	long firstEntry=-1;
 	DataOutputStream out;
 	
-	public SensorLogger(Sensor sensor, int interval, String typeName, File logFolder){
+	public SensorLogger(Detector detector, Sensor sensor, int interval, String typeName, File logFolder){
+		this.detector=detector;
 		this.sensor = sensor;
 		this.interval = interval;
 		this.typeName=typeName;
@@ -70,14 +73,13 @@ public abstract class SensorLogger implements SensorEventListener{
 		
 		firstEntry=-1;
 		started = System.currentTimeMillis();
-		
+		currentFile=new File(
+				logFolder,
+				typeName+"_"+sensor.getName()+"_"+dateFormat.format(new Date(started))+".log"
+		);
 		try {
 			out = new DataOutputStream(
-					new FileOutputStream(
-						new File(
-								logFolder,
-								typeName+"_"+sensor.getName()+"_"+dateFormat.format(new Date(started))+".log"
-					)));
+					new FileOutputStream(currentFile));
 			logHeader();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -94,6 +96,11 @@ public abstract class SensorLogger implements SensorEventListener{
 			e.printStackTrace();
 		}
 		out = null;
+		
+		if (currentFile!=null){
+			detector.finished(currentFile);
+			currentFile=null;
+		}
 	}
 
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {}

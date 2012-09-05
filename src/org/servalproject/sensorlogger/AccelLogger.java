@@ -11,8 +11,8 @@ public class AccelLogger extends SensorLogger {
 	long previousTime=-1;
 	float gravity[]=new float[3];
 	
-	public AccelLogger(Sensor sensor, File logFolder) {
-		super(sensor, SensorManager.SENSOR_DELAY_NORMAL, "Accelerometer", logFolder);
+	public AccelLogger(Detector detector, Sensor sensor, File logFolder) {
+		super(detector, sensor, SensorManager.SENSOR_DELAY_NORMAL, "Accelerometer", logFolder);
 	}
 
 	@Override
