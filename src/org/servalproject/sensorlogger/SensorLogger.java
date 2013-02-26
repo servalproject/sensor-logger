@@ -74,7 +74,7 @@ public abstract class SensorLogger implements SensorEventListener{
 		
 		firstEntry=-1;
 		started = System.currentTimeMillis();
-		String name=typeName+"_"+sensor.getName()+"_"+dateFormat.format(new Date(started));
+		String name=Detector.getId(detector)+"_"+typeName+"_"+sensor.getName()+"_"+dateFormat.format(new Date(started));
 		
 		currentFile=new File(
 				logFolder,

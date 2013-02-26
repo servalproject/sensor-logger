@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class Main extends Activity implements OnClickListener {
 	Button start;
@@ -24,6 +25,8 @@ public class Main extends Activity implements OnClickListener {
 	protected void onResume() {
 		super.onResume();
 		setText(Detector.running);
+		TextView deviceId = (TextView)this.findViewById(R.id.device_id);
+		deviceId.setText("Device ID: "+Detector.getId(this));
 	}
 
 	public void setText(boolean started){
